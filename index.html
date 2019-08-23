@@ -8,10 +8,10 @@
 
 		<link rel="stylesheet" href="css/reset.css">
 		<link rel="stylesheet" href="css/reveal.css">
-		<link rel="stylesheet" href="css/theme/black.css">
+		<link rel="stylesheet" href="css/theme/simple.css">
 
 		<!-- Theme used for syntax highlighting of code -->
-		<link rel="stylesheet" href="lib/css/monokai.css">
+		<link rel="stylesheet" href="lib/css/github-gist.css">
 
 		<!-- Printing and PDF exports -->
 		<script>
@@ -25,8 +25,237 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
+				<!-- Slide 1 -->
+				<section data-transition="none-in none-out">
+					<h3>A Simple CMake Project</h3>
+					<div class="container">
+						<div class="file-tree"> 
+							<strong>bhmie-f/</strong><br>
+							├── bhmie_mod.f90<br>
+							├── bhmie_smod.f<br>
+							├── callbhmie.f<br>
+							├── <strong>CMakeLists.txt</strong><br>
+							└── README<br>
+						</div>
+						<div class="inline-wide"><pre><code class="cmake" data-trim data-noescape data-line-numbers>
+							cmake_minimum_required(VERSION 3.5)
+							project(bhmie VERSION 1.0.0 LANGUAGES Fortran)
+
+
+							# Add a static library called libbhmie.a
+							add_library(bhmie STATIC
+								bhmie_smod.f
+								bhmie_mod.f90
+							)
+
+
+							# Add an executable called callbhmie
+							add_executable(callbhmie
+								callbhmie.f
+							)
+							# Specify that callbhmie links to libbhmie.a
+							target_link_libraries(callbhmie
+								bhmie 
+							)
+						</code></pre></div>
+					</div>
+				</section>
+
+				<section data-transition="none-in none-out">
+					<h3>A Simple CMake Project</h3>
+					<div class="container">
+						<div class="file-tree"> 
+							<strong>bhmie-f/</strong><br>
+							├── bhmie_mod.f90<br>
+							├── bhmie_smod.f<br>
+							├── callbhmie.f<br>
+							├── <strong>CMakeLists.txt</strong><br>
+							└── README<br>
+						</div>
+						<div class="inline-wide"><pre><code class="cmake" data-trim data-noescape data-line-numbers="1-2">
+							cmake_minimum_required(VERSION 3.5)
+							project(bhmie VERSION 1.0.0 LANGUAGES Fortran)
+
+
+							# Add a static library called libbhmie.a
+							add_library(bhmie STATIC
+								bhmie_smod.f
+								bhmie_mod.f90
+							)
+
+
+							# Add an executable called callbhmie
+							add_executable(callbhmie
+								callbhmie.f
+							)
+							# Specify that callbhmie links to libbhmie.a
+							target_link_libraries(callbhmie
+								bhmie 
+							)
+						</code></pre></div>
+					</div>
+				</section>
+
+				<!-- Slide 2 -->
+				<section data-transition="none-in none-out">
+					<section>
+						<h3>A Simple CMake Project</h3>
+						<div class="container">
+								<div class="file-tree"> 
+									<strong>bhmie-f/</strong><br>
+									├── bhmie_mod.f90<br>
+									├── bhmie_smod.f<br>
+									├── callbhmie.f<br>
+									├── <strong>CMakeLists.txt</strong><br>
+									└── README<br>
+								</div>
+								<div class="inline-wide"><pre><code class="cmake" data-trim data-noescape data-line-numbers="5-9">
+									cmake_minimum_required(VERSION 3.5)
+									project(bhmie VERSION 1.0.0 LANGUAGES Fortran)
+		
+		
+									# Add a static library called libbhmie.a
+									add_library(bhmie STATIC
+										bhmie_smod.f
+										bhmie_mod.f90
+									)
+		
+		
+									# Add an executable called callbhmie
+									add_executable(callbhmie
+										callbhmie.f
+									)
+									# Specify that callbhmie links to libbhmie.a
+									target_link_libraries(callbhmie
+										bhmie 
+									)
+								</code></pre></div>
+							</div>
+					</section>
+					<section>
+						<img class="plain" data-src="images/add_library.png">
+					</section>
+				</section>
+
+				<!-- Slide 3 -->
+				<section data-transition="none-in none-out">
+					<section>
+						<h3>A Simple CMake Project</h3>
+						<div class="container">
+								<div class="file-tree"> 
+									<strong>bhmie-f/</strong><br>
+									├── bhmie_mod.f90<br>
+									├── bhmie_smod.f<br>
+									├── callbhmie.f<br>
+									├── <strong>CMakeLists.txt</strong><br>
+									└── README<br>
+								</div>
+								<div class="inline-wide"><pre><code class="cmake" data-trim data-noescape data-line-numbers="13-15">
+									cmake_minimum_required(VERSION 3.5)
+									project(bhmie VERSION 1.0.0 LANGUAGES Fortran)
+		
+		
+									# Add a static library called libbhmie.a
+									add_library(bhmie STATIC
+										bhmie_smod.f
+										bhmie_mod.f90
+									)
+		
+		
+									# Add an executable called callbhmie
+									add_executable(callbhmie
+										callbhmie.f
+									)
+									# Specify that callbhmie links to libbhmie.a
+									target_link_libraries(callbhmie
+										bhmie 
+									)
+								</code></pre></div>
+							</div>
+					</section>
+					<section>
+						<img class="plain" data-src="images/add_executable.png">
+					</section>
+				</section>
+
+				<!-- Slide 4 -->
+				<section data-transition="none-in none-out">
+					<section>
+						<h3>A Simple CMake Project</h3>
+						<div class="container">
+								<div class="file-tree"> 
+									<strong>bhmie-f/</strong><br>
+									├── bhmie_mod.f90<br>
+									├── bhmie_smod.f<br>
+									├── callbhmie.f<br>
+									├── <strong>CMakeLists.txt</strong><br>
+									└── README<br>
+								</div>
+								<div class="inline-wide"><pre><code class="cmake" data-trim data-noescape data-line-numbers="16-19">
+									cmake_minimum_required(VERSION 3.5)
+									project(bhmie VERSION 1.0.0 LANGUAGES Fortran)
+		
+		
+									# Add a static library called libbhmie.a
+									add_library(bhmie STATIC
+										bhmie_smod.f
+										bhmie_mod.f90
+									)
+		
+		
+									# Add an executable called callbhmie
+									add_executable(callbhmie
+										callbhmie.f
+									)
+									# Specify that callbhmie links to libbhmie.a
+									target_link_libraries(callbhmie
+										bhmie 
+									)
+								</code></pre></div>
+							</div>
+					</section>
+					<section>
+						<img class="plain" data-src="images/target_link_libraries-1.png">
+					</section>
+				</section>
+
+				<!-- Slide 5 -->
+				<section data-transition="none-in none-out">
+					<section>
+						<h3>A Simple CMake Project</h3>
+						<div class="container">
+							<div class="file-tree"> 
+								<strong>bhmie-f/</strong><br>
+								├── bhmie_mod.f90<br>
+								├── bhmie_smod.f<br>
+								├── callbhmie.f<br>
+								├── <strong>CMakeLists.txt</strong><br>
+								└── README<br>
+							</div>
+							<div class="inline-wide"><pre><code class="cmake" data-trim data-noescape data-line-numbers>
+								cmake_minimum_required(VERSION 3.5)
+								project(bhmie VERSION 1.0.0 LANGUAGES Fortran)
+	
+	
+								# Add a static library called libbhmie.a
+								add_library(bhmie STATIC
+									bhmie_smod.f
+									bhmie_mod.f90
+								)
+	
+	
+								# Add an executable called callbhmie
+								add_executable(callbhmie
+									callbhmie.f
+								)
+								# Specify that callbhmie links to libbhmie.a
+								target_link_libraries(callbhmie
+									bhmie 
+								)
+							</code></pre></div>
+						</div>
+					</section>
+				</section>
 			</div>
 		</div>
 

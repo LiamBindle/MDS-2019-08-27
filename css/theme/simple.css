@@ -19,7 +19,7 @@ body {
 
 .reveal {
   font-family: "Lato", sans-serif;
-  font-size: 40px;
+  font-size: 30px;
   font-weight: normal;
   color: #000; }
 
@@ -55,6 +55,7 @@ body {
   letter-spacing: normal;
   text-transform: none;
   text-shadow: none;
+  text-align: left;
   word-wrap: break-word; }
 
 .reveal h1 {
@@ -274,3 +275,24 @@ body {
 @media print {
   .backgrounds {
     background-color: #fff; } }
+
+
+/* mine */
+.reveal .inline-wide {
+  flex: 1;
+}
+.reveal .file-tree {
+  font-size: 0.55em;
+  font-family: "Lato", sans-serif;
+  line-height: 1.2em;
+  text-align: left;
+  margin: 20px auto;
+}
+
+.reveal .container {
+  display: flex;
+}
+
+.small-code {
+  font-size: 0.3em !important;
+}
