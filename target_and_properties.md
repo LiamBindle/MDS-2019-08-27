@@ -9,16 +9,16 @@
 - A target is a component of your project (i.e. a library or executable)
 - Targets are created with
     ```cmake
-        add_library(<target name> [STATIC | SHARED | MODULE]
-            [EXCLUDE_FROM_ALL]
-            [source1] [source2 ...]
-        )
+    add_library(<target name> [STATIC | SHARED | MODULE]
+        [EXCLUDE_FROM_ALL]
+        [source1] [source2 ...]
+    )
     ```
     and
     ```cmake
-        add_executable(<target name> [EXCLUDE_FROM_ALL]
-            [source1] [source2 ...]
-        )
+    add_executable(<target name> [EXCLUDE_FROM_ALL]
+        [source1] [source2 ...]
+    )
     ```
 - And every target has properties
 
@@ -40,26 +40,51 @@
 | `PUBLIC` | <span style="color: green;">Yes</span> | <span style="color: green;">Yes</span> |
 
 </div>
-
-- The most important properties are for
-    - Compiler definitions
-    - Compiler options (flags)
-    - Include directories
-    - Link libraries
 </div>
 
 
-### Inheriting properties from dependencies
-<!-- - Again, a target's interface properties pass suage requirements to dependents -->
-- A target "inherits" interface properties from every target it links against
-<img class="plain" data-src="images/target_link_libraries-2.png">
-- So in
+### Important target properties
+<div style="text-align: left; width: 80%; display: block; margin-left: auto; margin-right: auto; font-size: 0.7em;">
 
+- Compiler definitions are added with
+
+```cmake
+target_compile_definitions(<target>
+                        <INTERFACE|PUBLIC|PRIVATE> [items1...]
+                        [<INTERFACE|PUBLIC|PRIVATE> [items2...] ...])
+```
+- Compiler options (flags) are added with
+
+```cmake
+target_compile_options(<target> [BEFORE]
+                    <INTERFACE|PUBLIC|PRIVATE> [items1...]
+                    [<INTERFACE|PUBLIC|PRIVATE> [items2...] ...])
+```
+- Include directories are added with
+
+```cmake
+target_include_directories(<target> [SYSTEM] [BEFORE]
+                        <INTERFACE|PUBLIC|PRIVATE> [items1...]
+                        [<INTERFACE|PUBLIC|PRIVATE> [items2...] ...])
+```
+
+- Link libraries are added with 
+
+```cmake
+target_link_libraries(<target>
+                    <PRIVATE|PUBLIC|INTERFACE> <item>...
+                    [<PRIVATE|PUBLIC|INTERFACE> <item>...]...)
+```
+</div>
+
+
+### How interface properties are inherited
+<!-- - Again, a target's interface properties pass suage requirements to dependents -->
+- A target "inherits" interface properties from the targets it links
+<img class="plain" data-src="images/target_link_libraries-2.png">
+
+- So 
     ```cmake
-    target_link_libraries(targetC
-        PRIVATE targetA
-        PUBLIC targetB
-    )
+    target_link_libraries(targetB PUBLIC targetA)
     ```
-- `targetC` gets interface properties from `targetA` and `targetB`
-- Only interface properties from `targetB` and passed on to dependents of `targetC`
+    causes `targetB` to "inherit" `targetA`'s interface properties
