@@ -1,10 +1,13 @@
 
-<h2 style="text-align: center">Targets and properties</h2>
+## Targets and properties
 
 (this is important) 
 
 
+<div style="text-align: left">
+
 ### Targets
+---
 
 - A target is a component of your project (i.e. a library or executable)
 - Targets are created with
@@ -21,10 +24,13 @@
     )
     ```
 - And every target has properties
+</div>
 
+
+<div style="text-align: left">
 
 ### Properties
-<div style="text-align: left; width: 80%; display: block; margin-left: auto; margin-right: auto;">
+---
 
 - Target properties are defined in one of two scopes: `PRIVATE` or `INTERFACE`
 - A target's properties serve two purposes:
@@ -43,8 +49,11 @@
 </div>
 
 
-### Important target properties
-<div style="text-align: left; width: 80%; display: block; margin-left: auto; margin-right: auto; font-size: 0.7em;">
+<div style="text-align: left">
+
+### Setting common target properties
+---
+<div style="margin: 0; font-size: 0.7em;">
 
 - Compiler definitions are added with
 
@@ -76,11 +85,14 @@ target_link_libraries(<target>
                     [<PRIVATE|PUBLIC|INTERFACE> <item>...]...)
 ```
 </div>
+</div>
 
 
-### How interface properties are inherited
-<!-- - Again, a target's interface properties pass suage requirements to dependents -->
-- A target "inherits" interface properties from the targets it links
+<div style="text-align: left">
+
+### How interface properties are passed
+---
+- A target "inherits" interface properties from the targets it "links"
 <img class="plain" data-src="images/target_link_libraries-2.png">
 
 - So 
@@ -88,3 +100,28 @@ target_link_libraries(<target>
     target_link_libraries(targetB PUBLIC targetA)
     ```
     causes `targetB` to "inherit" `targetA`'s interface properties
+</div>
+
+<div style="text-align: left">
+
+
+### Modern CMake
+---
+- Modern CMake is all about targets and properties
+- A target's interface properties should fully qualify its dependencies
+- This means fully resolved dependencies are passed up the chain such as
+    - Include directories
+    - Link libraries
+    - Required compiler flags
+- This makes it easy to maintain projects with deep hierarchical structure (e.g. GCHP)
+- Leads to a fundamental differences from GNUMake:
+
+<div style="text-align: center; font-size: 0.6em; margin: 20px auto;">
+
+| | Approach | Operation | 
+|---|:---:|---|
+| CMakeLists.txt | Bottom-up | Description of a project's targets | 
+| GNUMakefile | Top-down | Scripting of a project's build |
+
+</div>
+</div>

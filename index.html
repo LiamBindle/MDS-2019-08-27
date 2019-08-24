@@ -25,24 +25,27 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
+				<section>
+					<h2>A Basic CMake Project</h2>
+				</section>
 				<!-- Slide 1 -->
 				<section>
 					<section>
 						<h3 style="margin: 0;">A Basic CMake Project</h3>
 						<h5 style="margin: 0">Overview</h5>
-						<hr>
+						<hr style="margin-bottom: 20px">
 						<div class="container" style="width: 80%">
 							<div class="inline-wide" style="text-align: left; margin-right: 100px;">
 								<ul>
-									<li>Setup
+									<li>Example of a simple CMake project</li>
+									<li>Its an F90 module that wraps the original bhmie code
 										<ul>
-											<li>bhmie code: <a href="http://scatterlib.wikidot.com/mie">scatterlib/bhmie</a></li>
-											<li><code>bhmie_mod.f90 </code> is a module wrapping the original <code> bhmie(...) </code> subroutine</li>
+											<li>Original bhmie code: <a href="http://scatterlib.wikidot.com/mie">scatterlib/bhmie</a></li>
+											<li><code>bhmie_mod.f90 </code> is the module</li>
+											<li><code>bhmie_smod.f </code> is the original bhmie code as a submodule</li>
 											<li><code>callbhmie.f </code> is the example program</li>
-											<li>The build is described in <code>CMakeLists.txt</code></li>
 										</ul>
 									</li>
-									<li>These files can be found below</li>
 								</ul>
 							</div>
 							<div class="file-tree" style="margin: 0;"> 
@@ -66,14 +69,14 @@
 					<div class="container" style="width: 80%">
 						<div class="inline-wide" style="text-align: left; margin-right: 80px;">
 							<ol>
-								<li>Create a static library called "libbhmie.a" from
+								<li>Build a static library called <code>libbhmie.a</code> from
 									<ul>
-										<li>bhmie_mod.f90</li>
-										<li>bhmie_smod.f90</li>
+										<li><code>bhmie_mod.f90</code></li>
+										<li><code>bhmie_smod.f</code></li>
 									</ul>
 								</li>
-								<li>Create an executable from "callbhmie.f"
-									<ul><li>Link libbhmie.a</li></ul>
+								<li>Build an executable from "callbhmie.f"
+									<ul><li>Link <code>libbhmie.a</code></li></ul>
 								</li>
 							</ol>
 						</div>
@@ -347,6 +350,10 @@
 					  	 data-charset="iso-8859-15">
 				</section>
 
+				<section>
+					<h2>A Bigger CMake Project</h2>
+				</section>
+
 				<!-- Slide 5 -->
 				<section>
 						<!-- add_subdirectory and find_package, special variables, then what CMake is good at/not good at ...consistency-->
@@ -357,10 +364,11 @@
 							<div class="inline-wide" style="text-align: left; margin-right: 100px;">
 								
 									<ul>
-										<li>This is an example aerosol microphysics library called "amp"</li>
-										<li>Extends the bhmie-f project</li>
-										<li><code>amp_*.f90</code>  are module that provide microphysics routines</li>
-										<ul><li>These require LAPACK</li></ul>
+										<li>Example aerosol microphysics library called "amp"</li>
+										<li>Builds on the bhmie-f project</li>
+										<li><code>amp_*.f90 </code>  are modules with microphysics routines
+											<ul><li>These require LAPACK</li></ul>
+										</li>
 										<li><code>cloud_parcel.f90</code> is a parcel model
 											<ul><li>Uses kracken for command line argument parsing</li></ul>
 										</li>
@@ -945,7 +953,8 @@
 					{ src: 'plugin/markdown/marked.js' },
 					{ src: 'plugin/markdown/markdown.js' },
 					{ src: 'plugin/notes/notes.js', async: true },
-					{ src: 'plugin/highlight/highlight.js', async: true }
+					{ src: 'plugin/highlight/highlight.js', async: true },
+					{ src: 'plugin/zoom-js/zoom.js', async: true },
 				]
 			});
 		</script>

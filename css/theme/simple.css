@@ -58,6 +58,8 @@ body {
   text-align: left;
   word-wrap: break-word; }
 
+.reveal h2 { text-align: center; }
+
 .reveal h1 {
   font-size: 3.77em; }
 
