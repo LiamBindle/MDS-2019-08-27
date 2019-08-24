@@ -3,7 +3,7 @@
 
 ### Readable build logs
 ---
-<pre style="font-size: 0.25em;">
+<pre style="margin: 0; font-size: 0.25em;">
 <span style="color: gray;">~ $</span> <span class="fragment fade-in">cd ~/amp
 <span style="color: gray;">~/amp $</span></span><span class="fragment fade-in"> mkdir build
 <span style="color: gray;">~/amp $</span></span><span class="fragment fade-in"> cd build
@@ -65,7 +65,7 @@
 
 ### You only build what needs to be built
 ---
-<pre style="font-size: 0.4em;">
+<pre style="margin: 0; font-size: 0.4em;">
 <span style="color: gray;">~/amp/build $</span></span><span class="fragment fade-in"> make</span>
 <span class="fragment fade-in">[ 16%] Built target bhmie
 [ 44%] Built target amp
@@ -95,7 +95,7 @@
 
 ### Readable error messages
 ---
-<pre style="font-size: 0.4em;">
+<pre style="margin: 0; font-size: 0.4em;">
 <span style="color: gray;">~/amp/build $</span><span class="fragment fade-in"> echo "this is garbage" >> ../amp_chemistry.f90
 <span style="color: gray;">~/amp/build $</span></span><span class="fragment fade-in"> make </span><span class="fragment fade-in">
 [ 16%] Built target bhmie
@@ -135,11 +135,19 @@ make: *** [all] Error 2
 <div style="text-align: left">
 
 ### Some other things...
-- Cross-platform and cross-compiler support
-- Different build types: `Release`, `Debug`, and `RelWithDebInfo`
-- `make` targets that are consistent with all other CMake projects:
+---
+- You get different build types
+    - `Release`, `Debug`, `RelWithDebInfo`, and `MinSizeRel`
+    - The default flags are overwrittable for each
+- Your `make` targets are consistent with other CMake projects:
     - `make all`: builds the project
     - `make clean`: cleans everything built by `make all`
-    - `make <target name>`: builds `<target name>` (and dependencies)
-- It's easy to nest `amp` in other CMake projects
+    - `make <target name>`: builds `<target name>` (and its dependencies)
+- You build doesn't need to rely on system-wide environment variables
+    - *Except `CC`, `CXX`, and `FC` on systems with multiple compilers
+- It's easy to nest your project in other CMake projects
+- You get cross-compiler support (to the ability of your source code)
+- You get support for different build systems
+    - Make, Qt Creator, Ninja, Apple Xcode, and Microsoft Visual Studio
+- You get cross-platform support
 </div>
