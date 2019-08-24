@@ -151,3 +151,22 @@ make: *** [all] Error 2
     - Make, Qt Creator, Ninja, Apple Xcode, and Microsoft Visual Studio
 - You get cross-platform support
 </div>
+
+
+
+## But... what are the downsides?
+
+
+<div style="text-align: left">
+
+### The downsides of CMake
+---
+- The initial investment is high
+    - No good tools for converting Makefiles to CMakeLists
+    - Testing that two build systems are "equivalent" is challenging
+- The CMake language
+    - It's a custom scripting language
+    - Many ways to do the same thing
+    - Big shift in practices between CMake 2 and CMake 3
+- It's "Yet another" tool
+</div>
