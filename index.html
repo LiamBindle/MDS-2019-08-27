@@ -26,7 +26,7 @@
 		<div class="reveal">
 			<div class="slides">
 				<section>
-					<h2 style="margin: 0; text-align: left;">CMake (the dev side)</h2>
+					<h2 style="margin: 0; text-align: left;">A Deep Dive into CMake</h2>
 					<hr>
 					<h4 style="margin: 0;">MDS</h4>
 					<h4 style="margin: 0;">2019-08-27</h4>
@@ -36,12 +36,22 @@
 					<div style="text-align: left;">
 						<h3 style="margin: 0;">Overview</h3>
 						<hr>
-						<ul>
-							<li>A Basic CMake Project</li>
-							<li>Targets and properties</li>
-							<li>A Bigger CMake Project</li>
-							<li>The Results</li>
-						</ul>
+						<ol>
+							<li>Overview of Modern CMake
+								<ul>
+									<li>A Basic CMake Project</li>
+									<li>Targets and properties</li>
+									<li>A Bigger CMake Project</li>
+								</ul>
+							</li>
+							<li>GEOS-Chem's CMakeLists
+								<ul>
+									<li>Principles</li>
+									<li>Dependency structure</li>
+									<li>How it all works</li>
+								</ul>
+							</li>
+						</ol>
 					</div>
 				</section>
 				<section>
@@ -1035,6 +1045,7 @@
 									geos-chem/<br>
 									├── APM/<br>
 									├── bin/<br>
+									├── CMakeScripts/<br>
 									├── doc/<br>
 									├── GeosCore/<br>
 									├── GeosRad/<br>
@@ -1052,7 +1063,7 @@
 									├── ObsPack/<br>
 									├── PKUCPL/<br>
 									├── AUTHORS.txt<br>
-									├── CMakeScripts<br>
+									├── CMakeLists.txt<br>
 									├── LICENSE.txt<br>
 									├── Makefile<br>
 									├── Makefile_header.mk<br>
@@ -1061,6 +1072,782 @@
 								</code></small>
 							</div>
 						</div>
+				</section>
+				<section data-transition="none-out">
+					<div style="text-align: left;">
+						<h3 style="margin: 0;">GEOS-Chem's CMakeLists</h3>
+						<h5 style="margin: 0">The flow of geos-chem/CMakeLists.txt</h5>
+						<hr>
+						<ol>
+							<li>Set up the project
+								<ul>
+									<li>Declare the project</li>
+									<li>Set policies</li>
+									<li>Import helper functions</li>
+									<li>Create <code>BaseTarget</code></li>
+									<li>Set basic <code>BaseTarget</code> properties (e.g. module directory)</li>
+								</ul>
+							</li>
+							<li>Configure <code>BaseTarget</code>
+								<ul>
+									<li>Find the run directory</li>
+									<li>Call <code>${RUNDIR}/getRunInfo</code></li>
+									<li>Set compiler definitions and options</li>
+								</ul>
+							<li>Add subdirectories</li>
+						</ol>
+					</div>
+				</section>
+				<section data-transition="none-in none-out">
+					<section>
+						<div style="text-align: left;">
+							<h3 style="margin: 0;">GEOS-Chem's CMakeLists</h3>
+							<h5 style="margin: 0">Setting up the project</h5>
+							<hr>
+							<ol>
+								<li>Set up the project
+									<ul>
+										<li>Declare the project</li>
+										<li>Set policies</li>
+										<li>Import helper functions</li>
+										<li>Create <code>BaseTarget</code></li>
+										<li>Set basic <code>BaseTarget</code> properties (e.g. module directory)</li>
+									</ul>
+								</li>
+								<li style="opacity: 0.5;">Configure <code>BaseTarget</code>
+									<ul>
+										<li>Find the run directory</li>
+										<li>Call <code>${RUNDIR}/getRunInfo</code></li>
+										<li>Set compiler definitions and options</li>
+									</ul>
+								<li style="opacity: 0.5;">Add subdirectories</li>
+							</ol>
+						</div>
+					</section>
+					<section>
+						<h3 style="margin: 0;">geos-chem/CMakeLists.txt</h3>
+						<hr>
+						<pre><code class="cmake" data-trim data-noescape data-line-numbers="1-67">
+							cmake_minimum_required(VERSION 3.5)
+							project(GEOS_Chem VERSION 12.4.0 LANGUAGES Fortran)
+							
+							# Set policies
+							cmake_policy(SET CMP0054 NEW)
+							cmake_policy(SET CMP0057 NEW)
+							if(POLICY CMP0074)
+								cmake_policy(SET CMP0074 NEW)
+							endif()
+							if(POLICY CMP0079)
+								cmake_policy(SET CMP0079 NEW)
+							endif()
+							
+							# Add CMakeScripts/ to the module path and import helper functions
+							list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/CMakeScripts)
+							include(GC-Helpers)
+							
+							# Declare the BaseTarget. All GEOS-Chem targets depend on BaseTarget.
+							# This is used to control the compiler options and definitions for GEOS-Chem
+							# targets (via inheritance). 
+							add_library(BaseTarget INTERFACE)
+							
+							# Put all of GEOS-Chem's mod files in a subdirectory of the build directory called mod
+							set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/mod)
+							target_include_directories(BaseTarget 
+								INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/mod
+							)
+							
+							# Link NetCDF-F to BaseTarget
+							find_package(NetCDF REQUIRED)
+							target_link_libraries(BaseTarget INTERFACE NetCDF-F)
+							
+							# Use the NC_HAS_COMPRESSION definition if nf_def_var_deflate is in netcdf.inc
+							if(EXISTS ${NETCDF_F77_INCLUDE_DIR}/netcdf.inc)
+								file(READ ${NETCDF_F77_INCLUDE_DIR}/netcdf.inc NCINC)
+								if("${NCINC}" MATCHES ".*nf_def_var_deflate.*")
+									target_compile_definitions(BaseTarget INTERFACE "NC_HAS_COMPRESSION")
+								endif()
+							endif()
+							
+							# Print a description of the source code repo's version
+							get_repo_version(GC_REPO_VERSION ${CMAKE_SOURCE_DIR})
+							message(STATUS "GEOS-Chem version: ${GC_REPO_VERSION}")
+							
+							if(NOT GC_EXTERNAL_CONFIG)
+								# This conditional block configures the GEOS-Chem build for GEOS-Chem 
+								# Classic. As mentioned above, it sets GCCLASSIC_EXE_TARGETS, RRTMG, GTMM
+								# TOMAS, MECH, and GCHP, and it configures the BaseTarget.
+							
+								# Set CMAKE_BUILD_TYPE to Release by default
+								if(NOT CMAKE_BUILD_TYPE)
+									set(CMAKE_BUILD_TYPE "Release" 
+										CACHE STRING
+										"Choose the type of build, options are: Debug Release."
+										FORCE
+									)
+								endif()
+								
+								# Display CMAKE_PREFIX_PATH and CMAKE_BUILD_TYPE
+								gc_message(SECTION "Useful CMake variables")
+								gc_message(VARIABLE CMAKE_PREFIX_PATH)
+								set_dynamic_option(CMAKE_BUILD_TYPE     # making CMAKE_BUILD_TYPE an option restricts it to Release and Debug
+									DEFAULT ${CMAKE_BUILD_TYPE}
+									OPTIONS "Release" "Debug"
+									LOG CMAKE_VAR_LOG
+								)
+								dump_log(CMAKE_VAR_LOG)
+							
+								# Get the run directory
+								gc_message(SECTION "Run directory setup")
+								set(RUNDIR_DEFAULT "..")
+								set_dynamic_default(RUNDIR DEFAULT "${RUNDIR_DEFAULT}"
+									LOG RUNDIR_LOG
+									IS_DIRECTORY
+								)
+								dump_log(RUNDIR_LOG)
+								message(STATUS "Bootstrapping ${RUNDIR}")
+								get_filename_component(RUNDIR "${RUNDIR}" ABSOLUTE) # Make RUNDIR an absolute path
+							
+								# Configure the GEOS-Chem build for GCHP or GC-Classic
+								if(EXISTS ${RUNDIR}/input.geos)
+									file(STRINGS ${RUNDIR}/input.geos GCHP REGEX ": *gchp_*")
+								elseif(EXISTS ${RUNDIR}/getRunInfo)
+									set(GCHP FALSE) # getRunInfo is only in GC-Classic run direcotries
+								else()
+									message(FATAL_ERROR "Your run directory doesn't have an input.geos or getRunInfo! Set RUNDIR to a valid run directory.")
+								endif()
+								if(GCHP)
+									add_subdirectory(GCHP)
+								else()
+									# Configure for GCClassic
+									include(GC-ConfigureClassic)
+									configureGCClassic()
+								endif()
+							
+								# Use the default compiler options
+								include(GC-DefaultCompilerOptions)
+							endif()
+							
+							# Add all the subdirectories. Each subdirectory specifies how it should be built.
+							add_subdirectory(KPP)
+							add_subdirectory(Headers)
+							add_subdirectory(GeosUtil)
+							add_subdirectory(NcdfUtil)
+							add_subdirectory(History)
+							add_subdirectory(ObsPack)
+							add_subdirectory(APM)
+							add_subdirectory(HEMCO)
+							add_subdirectory(ISORROPIA)
+							add_subdirectory(GeosRad)
+							add_subdirectory(GTMM)
+							add_subdirectory(GeosCore)
+							
+							# Write BaseTarget's configuration to a file
+							get_target_property(BT_DEFINITIONS  BaseTarget INTERFACE_COMPILE_DEFINITIONS)
+							get_target_property(BT_OPTIONS      BaseTarget INTERFACE_COMPILE_OPTIONS)
+							get_target_property(BT_LIBRARIES    BaseTarget INTERFACE_LINK_LIBRARIES)
+							get_target_property(BT_INCLUDES     BaseTarget INTERFACE_INCLUDE_DIRECTORIES)
+							file(WRITE ${CMAKE_BINARY_DIR}/BaseTarget.txt
+								"# This file shows the BaseTarget's configuration.\n"
+								"\n"
+								"BaseTarget::INTERFACE_COMPILE_DEFINITIONS:${BT_DEFINITIONS}\n"
+								"BaseTarget::INTERFACE_COMPILE_OPTIONS:${BT_OPTIONS}\n"
+								"BaseTarget::INTERFACE_LINK_LIBRARIES:${BT_LIBRARIES}\n"
+								"BaseTarget::INTERFACE_INCLUDE_DIRECTORIES:${BT_INCLUDES}\n"
+								"CMAKE_Fortran_FLAGS_RELEASE:${CMAKE_Fortran_FLAGS_RELEASE}\n"
+								"CMAKE_Fortran_FLAGS_DEBUG:${CMAKE_Fortran_FLAGS_DEBUG}\n"
+								"CMAKE_Fortran_FLAGS:${CMAKE_Fortran_FLAGS}\n\n"
+							)									
+						</code></pre>
+					</section>
+					<section>
+						<div style="text-align: left;">
+							<h3 style="margin: 0;">geos-chem/CMakeLists.txt</h3>
+							<h5 style="margin: 0">Contents of CMakeScripts/</h5>
+							<small style="width: 400px"><pre><code class="nohighlight" data-trim data-noescape>
+								<strong>geos-chem/</strong>
+								├── APM/
+								├── bin/
+								├── <strong>CMakeScripts/</strong>
+								│   ├── <strong>FindNetCDF.cmake</strong>
+								│   ├── GC-ConfigureClassic.cmake
+								│   ├── GC-ConfigureForClassicRunDirectory.cmake
+								│   ├── GC-DefaultCompilerOptions.cmake
+								│   └── <strong>GC-Helpers.cmake</strong>
+								├── doc/
+								├── GeosCore/
+								├── GeosRad/
+								├── GeosUtil/
+								├── GTMM/
+								├── Headers/
+								├── help/
+								├── HEMCO/
+								├── History/
+								├── ISORROPIA/
+								├── KPP/
+								├── lib/
+								├── mod/
+								├── NcdfUtil/
+								├── ObsPack/
+								├── PKUCPL/
+								├── AUTHORS.txt
+								├── CMakeLists.txt
+								├── LICENSE.txt
+								├── Makefile
+								├── Makefile_header.mk
+								├── README.md
+								└── REVISIONS
+							</code></pre></small>
+						</div>
+					</section>
+				</section>
+				<section data-transition="none-in none-out">
+					<section>
+						<div style="text-align: left;">
+							<h3 style="margin: 0;">GEOS-Chem's CMakeLists</h3>
+							<h5 style="margin: 0">Configuring BaseTarget</h5>
+							<hr>
+							<ol>
+								<li style="opacity: 0.5;">Set up the project
+									<ul>
+										<li>Declare the project</li>
+										<li>Set policies</li>
+										<li>Import helper functions</li>
+										<li>Create <code>BaseTarget</code></li>
+										<li>Set basic <code>BaseTarget</code> properties (e.g. module directory)</li>
+									</ul>
+								</li>
+								<li>Configure <code>BaseTarget</code>
+									<ul>
+										<li>Find the run directory</li>
+										<li>Call <code>${RUNDIR}/getRunInfo</code></li>
+										<li>Set compiler definitions and options</li>
+									</ul>
+								<li style="opacity: 0.5;">Add subdirectories</li>
+							</ol>
+						</div>
+					</section>
+					<section>
+						<h3 style="margin: 0;">geos-chem/CMakeLists.txt</h3>
+						<hr>
+						<pre><code class="cmake" data-trim data-noescape data-line-numbers="69-98">
+							cmake_minimum_required(VERSION 3.5)
+							project(GEOS_Chem VERSION 12.4.0 LANGUAGES Fortran)
+							
+							# Set policies
+							cmake_policy(SET CMP0054 NEW)
+							cmake_policy(SET CMP0057 NEW)
+							if(POLICY CMP0074)
+								cmake_policy(SET CMP0074 NEW)
+							endif()
+							if(POLICY CMP0079)
+								cmake_policy(SET CMP0079 NEW)
+							endif()
+							
+							# Add CMakeScripts/ to the module path and import helper functions
+							list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/CMakeScripts)
+							include(GC-Helpers)
+							
+							# Declare the BaseTarget. All GEOS-Chem targets depend on BaseTarget.
+							# This is used to control the compiler options and definitions for GEOS-Chem
+							# targets (via inheritance). 
+							add_library(BaseTarget INTERFACE)
+							
+							# Put all of GEOS-Chem's mod files in a subdirectory of the build directory called mod
+							set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/mod)
+							target_include_directories(BaseTarget 
+								INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/mod
+							)
+							
+							# Link NetCDF-F to BaseTarget
+							find_package(NetCDF REQUIRED)
+							target_link_libraries(BaseTarget INTERFACE NetCDF-F)
+							
+							# Use the NC_HAS_COMPRESSION definition if nf_def_var_deflate is in netcdf.inc
+							if(EXISTS ${NETCDF_F77_INCLUDE_DIR}/netcdf.inc)
+								file(READ ${NETCDF_F77_INCLUDE_DIR}/netcdf.inc NCINC)
+								if("${NCINC}" MATCHES ".*nf_def_var_deflate.*")
+									target_compile_definitions(BaseTarget INTERFACE "NC_HAS_COMPRESSION")
+								endif()
+							endif()
+							
+							# Print a description of the source code repo's version
+							get_repo_version(GC_REPO_VERSION ${CMAKE_SOURCE_DIR})
+							message(STATUS "GEOS-Chem version: ${GC_REPO_VERSION}")
+							
+							if(NOT GC_EXTERNAL_CONFIG)
+								# This conditional block configures the GEOS-Chem build for GEOS-Chem 
+								# Classic. As mentioned above, it sets GCCLASSIC_EXE_TARGETS, RRTMG, GTMM
+								# TOMAS, MECH, and GCHP, and it configures the BaseTarget.
+							
+								# Set CMAKE_BUILD_TYPE to Release by default
+								if(NOT CMAKE_BUILD_TYPE)
+									set(CMAKE_BUILD_TYPE "Release" 
+										CACHE STRING
+										"Choose the type of build, options are: Debug Release."
+										FORCE
+									)
+								endif()
+								
+								# Display CMAKE_PREFIX_PATH and CMAKE_BUILD_TYPE
+								gc_message(SECTION "Useful CMake variables")
+								gc_message(VARIABLE CMAKE_PREFIX_PATH)
+								set_dynamic_option(CMAKE_BUILD_TYPE     # making CMAKE_BUILD_TYPE an option restricts it to Release and Debug
+									DEFAULT ${CMAKE_BUILD_TYPE}
+									OPTIONS "Release" "Debug"
+									LOG CMAKE_VAR_LOG
+								)
+								dump_log(CMAKE_VAR_LOG)
+							
+								# Get the run directory
+								gc_message(SECTION "Run directory setup")
+								set(RUNDIR_DEFAULT "..")
+								set_dynamic_default(RUNDIR DEFAULT "${RUNDIR_DEFAULT}"
+									LOG RUNDIR_LOG
+									IS_DIRECTORY
+								)
+								dump_log(RUNDIR_LOG)
+								message(STATUS "Bootstrapping ${RUNDIR}")
+								get_filename_component(RUNDIR "${RUNDIR}" ABSOLUTE) # Make RUNDIR an absolute path
+							
+								# Configure the GEOS-Chem build for GCHP or GC-Classic
+								if(EXISTS ${RUNDIR}/input.geos)
+									file(STRINGS ${RUNDIR}/input.geos GCHP REGEX ": *gchp_*")
+								elseif(EXISTS ${RUNDIR}/getRunInfo)
+									set(GCHP FALSE) # getRunInfo is only in GC-Classic run direcotries
+								else()
+									message(FATAL_ERROR "Your run directory doesn't have an input.geos or getRunInfo! Set RUNDIR to a valid run directory.")
+								endif()
+								if(GCHP)
+									add_subdirectory(GCHP)
+								else()
+									# Configure for GCClassic
+									include(GC-ConfigureClassic)
+									configureGCClassic()
+								endif()
+							
+								# Use the default compiler options
+								include(GC-DefaultCompilerOptions)
+							endif()
+							
+							# Add all the subdirectories. Each subdirectory specifies how it should be built.
+							add_subdirectory(KPP)
+							add_subdirectory(Headers)
+							add_subdirectory(GeosUtil)
+							add_subdirectory(NcdfUtil)
+							add_subdirectory(History)
+							add_subdirectory(ObsPack)
+							add_subdirectory(APM)
+							add_subdirectory(HEMCO)
+							add_subdirectory(ISORROPIA)
+							add_subdirectory(GeosRad)
+							add_subdirectory(GTMM)
+							add_subdirectory(GeosCore)
+							
+							# Write BaseTarget's configuration to a file
+							get_target_property(BT_DEFINITIONS  BaseTarget INTERFACE_COMPILE_DEFINITIONS)
+							get_target_property(BT_OPTIONS      BaseTarget INTERFACE_COMPILE_OPTIONS)
+							get_target_property(BT_LIBRARIES    BaseTarget INTERFACE_LINK_LIBRARIES)
+							get_target_property(BT_INCLUDES     BaseTarget INTERFACE_INCLUDE_DIRECTORIES)
+							file(WRITE ${CMAKE_BINARY_DIR}/BaseTarget.txt
+								"# This file shows the BaseTarget's configuration.\n"
+								"\n"
+								"BaseTarget::INTERFACE_COMPILE_DEFINITIONS:${BT_DEFINITIONS}\n"
+								"BaseTarget::INTERFACE_COMPILE_OPTIONS:${BT_OPTIONS}\n"
+								"BaseTarget::INTERFACE_LINK_LIBRARIES:${BT_LIBRARIES}\n"
+								"BaseTarget::INTERFACE_INCLUDE_DIRECTORIES:${BT_INCLUDES}\n"
+								"CMAKE_Fortran_FLAGS_RELEASE:${CMAKE_Fortran_FLAGS_RELEASE}\n"
+								"CMAKE_Fortran_FLAGS_DEBUG:${CMAKE_Fortran_FLAGS_DEBUG}\n"
+								"CMAKE_Fortran_FLAGS:${CMAKE_Fortran_FLAGS}\n\n"
+							)									
+						</code></pre>
+					</section>
+					<section>
+						<div style="text-align: left;">
+							<h3 style="margin: 0;">geos-chem/CMakeLists.txt</h3>
+							<h5 style="margin: 0">Contents of CMakeScripts/</h5>
+							<small style="width: 400px"><pre><code class="nohighlight" data-trim data-noescape>
+								<strong>geos-chem/</strong>
+								├── APM/
+								├── bin/
+								├── <strong>CMakeScripts/</strong>
+								│   ├── FindNetCDF.cmake
+								│   ├── <strong>GC-ConfigureClassic.cmake</strong>
+								│   ├── <strong>GC-ConfigureForClassicRunDirectory.cmake</strong>
+								│   ├── <strong>GC-DefaultCompilerOptions.cmake</strong>
+								│   └── GC-Helpers.cmake
+								├── doc/
+								├── GeosCore/
+								├── GeosRad/
+								├── GeosUtil/
+								├── GTMM/
+								├── Headers/
+								├── help/
+								├── HEMCO/
+								├── History/
+								├── ISORROPIA/
+								├── KPP/
+								├── lib/
+								├── mod/
+								├── NcdfUtil/
+								├── ObsPack/
+								├── PKUCPL/
+								├── AUTHORS.txt
+								├── CMakeLists.txt
+								├── LICENSE.txt
+								├── Makefile
+								├── Makefile_header.mk
+								├── README.md
+								└── REVISIONS
+							</code></pre></small>
+						</div>
+					</section>
+				</section>
+				<section data-transition="none-in none-out">
+					<section>
+						<div style="text-align: left;">
+							<h3 style="margin: 0;">GEOS-Chem's CMakeLists</h3>
+							<h5 style="margin: 0">Adding our subdirectories BaseTarget</h5>
+							<hr>
+							<ol>
+								<li style="opacity: 0.5;">Set up the project
+									<ul>
+										<li>Declare the project</li>
+										<li>Set policies</li>
+										<li>Import helper functions</li>
+										<li>Create <code>BaseTarget</code></li>
+										<li>Set basic <code>BaseTarget</code> properties (e.g. module directory)</li>
+									</ul>
+								</li>
+								<li style="opacity: 0.5;">Configure <code>BaseTarget</code>
+									<ul>
+										<li>Find the run directory</li>
+										<li>Call <code>${RUNDIR}/getRunInfo</code></li>
+										<li>Set compiler definitions and options</li>
+									</ul>
+								<li>Add subdirectories</li>
+							</ol>
+						</div>
+					</section>
+					<section>
+						<h3 style="margin: 0;">geos-chem/CMakeLists.txt</h3>
+						<hr>
+						<pre><code class="cmake" data-trim data-noescape data-line-numbers="100-112">
+							cmake_minimum_required(VERSION 3.5)
+							project(GEOS_Chem VERSION 12.4.0 LANGUAGES Fortran)
+							
+							# Set policies
+							cmake_policy(SET CMP0054 NEW)
+							cmake_policy(SET CMP0057 NEW)
+							if(POLICY CMP0074)
+								cmake_policy(SET CMP0074 NEW)
+							endif()
+							if(POLICY CMP0079)
+								cmake_policy(SET CMP0079 NEW)
+							endif()
+							
+							# Add CMakeScripts/ to the module path and import helper functions
+							list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/CMakeScripts)
+							include(GC-Helpers)
+							
+							# Declare the BaseTarget. All GEOS-Chem targets depend on BaseTarget.
+							# This is used to control the compiler options and definitions for GEOS-Chem
+							# targets (via inheritance). 
+							add_library(BaseTarget INTERFACE)
+							
+							# Put all of GEOS-Chem's mod files in a subdirectory of the build directory called mod
+							set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/mod)
+							target_include_directories(BaseTarget 
+								INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/mod
+							)
+							
+							# Link NetCDF-F to BaseTarget
+							find_package(NetCDF REQUIRED)
+							target_link_libraries(BaseTarget INTERFACE NetCDF-F)
+							
+							# Use the NC_HAS_COMPRESSION definition if nf_def_var_deflate is in netcdf.inc
+							if(EXISTS ${NETCDF_F77_INCLUDE_DIR}/netcdf.inc)
+								file(READ ${NETCDF_F77_INCLUDE_DIR}/netcdf.inc NCINC)
+								if("${NCINC}" MATCHES ".*nf_def_var_deflate.*")
+									target_compile_definitions(BaseTarget INTERFACE "NC_HAS_COMPRESSION")
+								endif()
+							endif()
+							
+							# Print a description of the source code repo's version
+							get_repo_version(GC_REPO_VERSION ${CMAKE_SOURCE_DIR})
+							message(STATUS "GEOS-Chem version: ${GC_REPO_VERSION}")
+							
+							if(NOT GC_EXTERNAL_CONFIG)
+								# This conditional block configures the GEOS-Chem build for GEOS-Chem 
+								# Classic. As mentioned above, it sets GCCLASSIC_EXE_TARGETS, RRTMG, GTMM
+								# TOMAS, MECH, and GCHP, and it configures the BaseTarget.
+							
+								# Set CMAKE_BUILD_TYPE to Release by default
+								if(NOT CMAKE_BUILD_TYPE)
+									set(CMAKE_BUILD_TYPE "Release" 
+										CACHE STRING
+										"Choose the type of build, options are: Debug Release."
+										FORCE
+									)
+								endif()
+								
+								# Display CMAKE_PREFIX_PATH and CMAKE_BUILD_TYPE
+								gc_message(SECTION "Useful CMake variables")
+								gc_message(VARIABLE CMAKE_PREFIX_PATH)
+								set_dynamic_option(CMAKE_BUILD_TYPE     # making CMAKE_BUILD_TYPE an option restricts it to Release and Debug
+									DEFAULT ${CMAKE_BUILD_TYPE}
+									OPTIONS "Release" "Debug"
+									LOG CMAKE_VAR_LOG
+								)
+								dump_log(CMAKE_VAR_LOG)
+							
+								# Get the run directory
+								gc_message(SECTION "Run directory setup")
+								set(RUNDIR_DEFAULT "..")
+								set_dynamic_default(RUNDIR DEFAULT "${RUNDIR_DEFAULT}"
+									LOG RUNDIR_LOG
+									IS_DIRECTORY
+								)
+								dump_log(RUNDIR_LOG)
+								message(STATUS "Bootstrapping ${RUNDIR}")
+								get_filename_component(RUNDIR "${RUNDIR}" ABSOLUTE) # Make RUNDIR an absolute path
+							
+								# Configure the GEOS-Chem build for GCHP or GC-Classic
+								if(EXISTS ${RUNDIR}/input.geos)
+									file(STRINGS ${RUNDIR}/input.geos GCHP REGEX ": *gchp_*")
+								elseif(EXISTS ${RUNDIR}/getRunInfo)
+									set(GCHP FALSE) # getRunInfo is only in GC-Classic run direcotries
+								else()
+									message(FATAL_ERROR "Your run directory doesn't have an input.geos or getRunInfo! Set RUNDIR to a valid run directory.")
+								endif()
+								if(GCHP)
+									add_subdirectory(GCHP)
+								else()
+									# Configure for GCClassic
+									include(GC-ConfigureClassic)
+									configureGCClassic()
+								endif()
+							
+								# Use the default compiler options
+								include(GC-DefaultCompilerOptions)
+							endif()
+							
+							# Add all the subdirectories. Each subdirectory specifies how it should be built.
+							add_subdirectory(KPP)
+							add_subdirectory(Headers)
+							add_subdirectory(GeosUtil)
+							add_subdirectory(NcdfUtil)
+							add_subdirectory(History)
+							add_subdirectory(ObsPack)
+							add_subdirectory(APM)
+							add_subdirectory(HEMCO)
+							add_subdirectory(ISORROPIA)
+							add_subdirectory(GeosRad)
+							add_subdirectory(GTMM)
+							add_subdirectory(GeosCore)
+							
+							# Write BaseTarget's configuration to a file
+							get_target_property(BT_DEFINITIONS  BaseTarget INTERFACE_COMPILE_DEFINITIONS)
+							get_target_property(BT_OPTIONS      BaseTarget INTERFACE_COMPILE_OPTIONS)
+							get_target_property(BT_LIBRARIES    BaseTarget INTERFACE_LINK_LIBRARIES)
+							get_target_property(BT_INCLUDES     BaseTarget INTERFACE_INCLUDE_DIRECTORIES)
+							file(WRITE ${CMAKE_BINARY_DIR}/BaseTarget.txt
+								"# This file shows the BaseTarget's configuration.\n"
+								"\n"
+								"BaseTarget::INTERFACE_COMPILE_DEFINITIONS:${BT_DEFINITIONS}\n"
+								"BaseTarget::INTERFACE_COMPILE_OPTIONS:${BT_OPTIONS}\n"
+								"BaseTarget::INTERFACE_LINK_LIBRARIES:${BT_LIBRARIES}\n"
+								"BaseTarget::INTERFACE_INCLUDE_DIRECTORIES:${BT_INCLUDES}\n"
+								"CMAKE_Fortran_FLAGS_RELEASE:${CMAKE_Fortran_FLAGS_RELEASE}\n"
+								"CMAKE_Fortran_FLAGS_DEBUG:${CMAKE_Fortran_FLAGS_DEBUG}\n"
+								"CMAKE_Fortran_FLAGS:${CMAKE_Fortran_FLAGS}\n\n"
+							)									
+						</code></pre>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>How are subdirectory targets included?</h2>
+					</section>
+					<section>
+						<div style="text-align: left;">
+							<h3 style="margin: 0;">How are subdirectory targets included?</h3>
+							<h5 style="margin: 0">Using History/ as an example</h5>
+							<small style="width: 400px"><pre><code class="nohighlight" data-trim data-noescape>
+								<strong>geos-chem/</strong>
+								├── APM/
+								├── bin/
+								├── CMakeScripts/
+								├── doc/
+								├── GeosCore/
+								├── GeosRad/
+								├── GeosUtil/
+								├── GTMM/
+								├── Headers/
+								├── help/
+								├── HEMCO/
+								├── <strong>History/</strong>
+								│   ├── CMakeLists.txt
+								│   ├── histcontainer_mod.F90
+								│   ├── histitem_mod.F90
+								│   ├── history_mod.F90
+								│   ├── history_netcdf_mod.F90
+								│   ├── history_util_mod.F90
+								│   ├── Makefile
+								│   ├── metahistcontainer_mod.F90
+								│   └── metahistitem_mod.F90
+								├── ISORROPIA/
+								├── KPP/
+								├── lib/
+								├── mod/
+								├── NcdfUtil/
+								├── ObsPack/
+								├── PKUCPL/
+								├── AUTHORS.txt
+								├── CMakeLists.txt
+								├── LICENSE.txt
+								├── Makefile
+								├── Makefile_header.mk
+								├── README.md
+								└── REVISIONS
+							</code></pre></small>
+						</div>
+					</section>
+					<section>
+						<h3 style="margin: 0;">Recall</h3>
+						<hr>
+						<img class="plain" data-src="images/GC.svg" style="height: 500px; width: 500px;">
+					</section>
+					<section>
+						<div style="text-align: left;">
+							<h3 style="margin: 0;">Create the <code>History</code> target</h3>
+							<h5 style="margin: 0;">geos-chem/History/CMakeLists.txt</code></h5>
+							<hr>
+							<div style="position: relative;">
+								<div>
+									<pre><code class="cmake" data-trim data-noescape data-line-numbers>
+										add_library(History STATIC EXCLUDE_FROM_ALL
+											histcontainer_mod.F90
+											histitem_mod.F90
+											history_mod.F90
+											history_netcdf_mod.F90
+											history_util_mod.F90
+											metahistcontainer_mod.F90
+											metahistitem_mod.F90
+										)
+										target_link_libraries(History
+											PUBLIC GeosUtil2
+										)
+									</code></pre>
+								</div>
+								<div class="file-tree"> 
+									<small style="position: absolute; top: 0; right: 0; background-color: white;"><code>
+										<strong>geos-chem/</strong><br>
+										├── APM/<br>
+										├── bin/<br>
+										├── CMakeScripts/<br>
+										├── doc/<br>
+										├── GeosCore/<br>
+										├── GeosRad/<br>
+										├── GeosUtil/<br>
+										├── GTMM/<br>
+										├── Headers/<br>
+										├── help/<br>
+										├── HEMCO/<br>
+										├── <strong>History/</strong><br>
+										│   ├── <strong>CMakeLists.txt</strong><br>
+										│   ├── histcontainer_mod.F90<br>
+										│   ├── histitem_mod.F90<br>
+										│   ├── history_mod.F90<br>
+										│   ├── history_netcdf_mod.F90<br>
+										│   ├── history_util_mod.F90<br>
+										│   ├── Makefile<br>
+										│   ├── metahistcontainer_mod.F90<br>
+										│   └── metahistitem_mod.F90<br>
+										├── ISORROPIA/<br>
+										├── KPP/<br>
+										├── lib/<br>
+										├── mod/<br>
+										├── NcdfUtil/<br>
+										├── ObsPack/<br>
+										├── PKUCPL/<br>
+										├── AUTHORS.txt<br>
+										├── CMakeLists.txt<br>
+										├── LICENSE.txt<br>
+										├── Makefile<br>
+										├── Makefile_header.mk<br>
+										├── README.md<br>
+										└── REVISIONS<br>
+									</code></small>
+								</div>
+							</div>
+					</section>
+					<section>
+						<div style="text-align: left;">
+							<h3 style="margin: 0;">Link <code>History</code> into <code>GeosCore</code></h3>
+							<h5 style="margin: 0;">Snippet from geos-chem/GeosCore/CMakeLists.txt</code></h5>
+							<hr>
+							<div style="position: relative;">
+								<div>
+									<pre><code class="cmake" data-trim data-noescape>
+										target_link_libraries(GeosCore
+											PUBLIC
+												Transport ObsPack HCOI History
+			
+												$<$< STREQUAL:${MECH},SOA_SVPOA>:KPP_SOA_SVPOA>
+												$<$< STREQUAL:${MECH},Standard>:KPP_Standard>
+												$<$< STREQUAL:${MECH},Tropchem>:KPP_Tropchem>
+			
+												$<$< BOOL:${APM}>:APM>
+												$<$< BOOL:${RRTMG}>:GeosRad>
+												$<$< BOOL:${GTMM}>:Hg>
+
+												Isorropia
+										)	
+									</code></pre>
+								</div>
+								<div class="file-tree"> 
+									<small style="position: absolute; top: 0; right: 0; background-color: white;"><code>
+										<strong>geos-chem/</strong><br>
+										├── APM/<br>
+										├── bin/<br>
+										├── CMakeScripts/<br>
+										├── doc/<br>
+										├── <strong>GeosCore/</strong><br>
+										│   ├── aero_drydep.F<br>
+										│   ├── ...<br>
+										│   ├── <strong>CMakeLists.txt</strong><br>
+										│   ├── ...<br>
+										│   └── YuIMN_Code.F<br>
+										├── GeosRad/<br>
+										├── GeosUtil/<br>
+										├── GTMM/<br>
+										├── Headers/<br>
+										├── help/<br>
+										├── HEMCO/<br>
+										├── History/<br>
+										├── ISORROPIA/<br>
+										├── KPP/<br>
+										├── lib/<br>
+										├── mod/<br>
+										├── NcdfUtil/<br>
+										├── ObsPack/<br>
+										├── PKUCPL/<br>
+										├── AUTHORS.txt<br>
+										├── CMakeLists.txt<br>
+										├── LICENSE.txt<br>
+										├── Makefile<br>
+										├── Makefile_header.mk<br>
+										├── README.md<br>
+										└── REVISIONS<br>
+									</code></small>
+								</div>
+							</div>
+					</section>
+				</section>
+				<section>
+					<h2>Questions?</h2>
+					<hr>
+					<img class="plain" data-src="images/GC.svg" style="height: 500px; width: 500px;">
 				</section>
 			</div>
 		</div>
