@@ -980,6 +980,88 @@
 				<section>
 					<h2>Questions?</h2>
 				</section>	
+				<section>
+					<h2>GEOS-Chem's CMakeLists</h2>
+				</section>	
+				<section>
+					<div style="text-align: left;">
+						<h3 style="margin: 0;">GEOS-Chem's CMakeLists</h3>
+						<h5 style="margin: 0">Principles</h5>
+						<hr>
+						<ul>
+							<li>Heavily reliant on modern CMake principles</li>
+							<li><code>BaseTarget</code> is used to pass properties up to GEOS-Chem's targets</li>
+							<li>All GEOS-Chem target's publicly link <code>BaseTarget</code></li>
+							<li><code>geos</code> is the only target included in "all"</li>
+							<li>What gets built depends on <code>geos</code>'s dependencies</li>
+						</ul>
+					</div>
+				</section>	
+				<section>
+					<h3 style="margin: 0;">GEOS-Chem's CMakeLists</h3>
+					<h5 style="margin: 0">Dependency structure</h5>
+					<hr>
+					<img class="plain" data-src="images/GC.svg" style="height: 500px; width: 500px;">
+				</section>
+				<section>
+					<h3 style="margin: 0;">GEOS-Chem's CMakeLists</h3>
+					<h5 style="margin: 0">Conceptually we need to...</h5>
+					<hr>
+						<div class="container" style="width: 90%">
+							<div class="inline-wide" style="text-align: left; margin-right: 100px;">
+								<ol>
+									<li class="fragment fade-in">Configure <code>BaseTarget</code> based on the simulation
+										<ul>
+											<li>Sets the compiler definitions and options for all our targets</li>
+											<li>Triggers <code>geos</code> to link NetCDF-Fortran and its dependencies</li>
+										</ul>
+									</li>
+									<li class="fragment fade-in">Add all our subdirectories</li>
+									<li class="fragment fade-in">Every subdirectory adds <strong>all</strong> its targets
+										<ul>
+											<li>Proper links are crucial</li>
+										</ul>
+									</li>
+									<li class="fragment fade-in">Set conditional links based on the simulation and the build configuration
+										<ul>
+											<li><code>KPPFirstPass_${MECH}</code>, and <code>KPP_${MECH}</code></li>
+											<li><code>APM</code>, <code>Hg</code>, and <code>GeosRad</code></li>
+										</ul>
+									</li>
+								</ol>
+							</div>
+							<div class="file-tree" style="margin: 0;"> 
+								<small><code>
+									geos-chem/<br>
+									├── APM/<br>
+									├── bin/<br>
+									├── doc/<br>
+									├── GeosCore/<br>
+									├── GeosRad/<br>
+									├── GeosUtil/<br>
+									├── GTMM/<br>
+									├── Headers/<br>
+									├── help/<br>
+									├── HEMCO/<br>
+									├── History/<br>
+									├── ISORROPIA/<br>
+									├── KPP/<br>
+									├── lib/<br>
+									├── mod/<br>
+									├── NcdfUtil/<br>
+									├── ObsPack/<br>
+									├── PKUCPL/<br>
+									├── AUTHORS.txt<br>
+									├── CMakeScripts<br>
+									├── LICENSE.txt<br>
+									├── Makefile<br>
+									├── Makefile_header.mk<br>
+									├── README.md<br>
+									└── REVISIONS<br>
+								</code></small>
+							</div>
+						</div>
+				</section>
 			</div>
 		</div>
 
