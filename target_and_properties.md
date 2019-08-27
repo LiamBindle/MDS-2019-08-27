@@ -12,14 +12,14 @@
 - A target is a component of your project (i.e. a library or executable)
 - Targets are created with
     ```cmake
-    add_library(<target name> [STATIC | SHARED | MODULE]
+    add_library(<name> [STATIC | SHARED | MODULE]
         [EXCLUDE_FROM_ALL]
         [source1] [source2 ...]
     )
     ```
     and
     ```cmake
-    add_executable(<target name> [EXCLUDE_FROM_ALL]
+    add_executable(<name> [EXCLUDE_FROM_ALL]
         [source1] [source2 ...]
     )
     ```
